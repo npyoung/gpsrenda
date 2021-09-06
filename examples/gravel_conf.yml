@@ -1,0 +1,43 @@
+globals:
+  video:
+    gstreamer:
+      h265: False
+
+data:
+  altitude:
+    lag: 25
+  grade:
+    averaging_time: 4
+
+widgets:
+  - type: Speed
+    style: hbar
+    x: 15
+    y: 935
+    units: 'imperial'
+    data_range:
+      0:  [0.2, 0.0, 0.6]
+      20: [0.0, 0.6, 0.0]
+      40: [0.8, 0.0, 0.0]
+
+  - type: HeartRate
+    style: hbar
+    x: 15
+    y: 1000
+    data_range:
+      100: [0.2, 0.0, 0.6]
+      200: [0.8, 0.0, 0.0]
+
+  - type: Map
+    style: map
+    x: 1505
+    y: 870
+    h: 195
+    privacy: true
+
+  - type: Elevation
+    style: grade
+    x: 1505
+    y: 705
+    h: 160
+    units: 'imperial'
