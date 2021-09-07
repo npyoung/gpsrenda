@@ -1,8 +1,8 @@
 #!/bin/bash
-RENDAPATH=$(dirname "$0");
-VIDEODIR=$(dirname "$1");
-DATADIR=$(dirname "$2");
-CONFIGDIR=$(dirname "$3");
+RENDAPATH=$(realpath $(dirname "$0"));
+VIDEODIR=$(realpath $(dirname "$1")); shift;
+DATADIR=$(realpath $(dirname "$1")); shift;
+CONFIGDIR=$(realpath $(dirname "$1")); shift;
 
 docker run \
 	-v /run/user/$UID/pulse/native:/run/pulse/native \
@@ -12,10 +12,11 @@ docker run \
 	-v /etc/localtime:/etc/localtime \
 	-v /etc/timezone:/etc/timezone \
 	-u $UID \
-	-v $RENDAPATH:/gpsrenda \
-	-v $VIDEODIR:$VIDEODIR \
-	-v $DATADIR:$DATADIR \
-	-v $CONFIGDIR:$CONFIGDIR \
+	-v "$RENDAPATH":/gpsrenda \
+	-v "$VIDEODIR":"$VIDEODIR" \
+	-v "$DATADIR":"$DATADIR" \
+	-v "$CONFIGDIR":"$CONFIGDIR" \
 	--rm \
 	--name renda-containa \
-	gpsrenda "$@"
+	gpsrenda /gpsrenda/gpsrenda/scripts/renda "$VIDEODIR" "$DATADIR" "$CONFIGDIR" "${@}"
+
