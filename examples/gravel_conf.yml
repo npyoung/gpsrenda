@@ -8,6 +8,7 @@ data:
     lag: 25
   grade:
     averaging_time: 4
+  gap_flatten_time: 10
 
 widgets:
   - type: Speed
@@ -31,13 +32,15 @@ widgets:
   - type: Map
     style: map
     x: 1505
-    y: 870
-    h: 195
+    y: 665
+    h: 400
+    w: 400
     privacy: true
 
   - type: Elevation
     style: grade
     x: 1505
-    y: 705
+    y: 490
     h: 160
+    w: 400
     units: 'imperial'
