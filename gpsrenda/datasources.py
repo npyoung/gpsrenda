@@ -38,11 +38,14 @@ def interp1d_zeroing(x, y, t, flatten_time = math.inf):
 
     if (t - pre[0]) > flatten_time:
         pre = (x[argt] - flatten_time, 0.0)
+        logger.info("Flattening because previous data was too old")
 
     if (post[0] - t) > flatten_time:
         post = (x[argt-1] + flatten_time, 0.0)
+        logger.info("Flattening because next data is too far from now")
 
     if post[0] < pre[0]: # we are flattening both
+        logger.info("Flattening because previous and next data points are too far away")
         return 0.0
 
     # do the lerp
@@ -72,9 +75,13 @@ class ParsedFitData:
             time = timestamp_to_seconds(data.pop('timestamp'))
             for key, value in data.items():
                 try:
-                    self.fields[key].append((time, value))
+                    entry = (time, *value)
+                except TypeError:
+                    entry = (time, value)
+                try:
+                    self.fields[key].append(entry)
                 except KeyError:
-                    self.fields[key] = [(time, value)]
+                    self.fields[key] = [entry]
 
     def save_cache(self, cache_path):
         with open(cache_path, "wb") as f:
@@ -105,7 +112,7 @@ class FitDataSource:
         try:
             logger.debug(f"trying to load FIT cache from {cache_name}")
             parsed = ParsedFitData.load_cache(cache_name)
-        except:
+        except FileNotFoundError:
             logger.info(f"could not load from FIT cache {cache_name}; loading FIT file the hard way (this may take a moment)")
             parsed = ParsedFitData(file_path)
             parsed.save_cache(cache_name)
