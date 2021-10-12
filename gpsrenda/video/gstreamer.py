@@ -31,6 +31,7 @@ class VideoSourceGoPro:
         else:
             self.flip = globals['video']['force_rotation'] == 180
         self.h265 = globals['video']['gstreamer']['h265'] # needed until we can pull this out of the file with libav
+        self.pcm = globals['video']['gstreamer']['pcm_audio']
         self.framerate = globals['video']['gstreamer']['framerate'] # needed until we can pull this out of the file with libav
         if globals['video']['scale'] is None:
             self.scale = None
@@ -40,14 +41,18 @@ class VideoSourceGoPro:
                 raise ValueError('scale parameter in globals is not WxH')
             self.scale = (int(m[1]), int(m[2]))
         self.splitmux = False
-        if re.match(r'.*G[HX]01....\.MP4', self.filename):
+        if re.match(r'.*G[HXL]01....\.(MP4|LRV)', self.filename):
             self.splitmux = True
-            self.splitfilename = re.sub(r'(G[HX])01(....\.MP4)', r'\1*\2', self.filename)
+            self.splitfilename = re.sub(r'(G[HXL])01(....\.(?:MP4|LRV))', r'\1*\2', self.filename)
             logger.debug(f"{filename} is a GoPro file, will glob to glue together -> {self.splitfilename}")
-            if re.match(r'.*GH01....\.MP4', self.filename):
+            if re.match(r'.*G[HL]01....\.(?:MP4|LRV)', self.filename):
                 self.h265 = False
             else:
                 self.h265 = True
+        if re.match(r'.*CYQ_....\.MP4', self.filename):
+            logger.debug(f"{filename} is a Cycliq file, turning on PCM audio override")
+            self.pcm = True
+            self.h265 = False
 
     def add_to_pipeline(self, pipeline):
         """Returns a tuple of GstElements that have src pads for *decoded* video and *encoded* audio."""
@@ -127,11 +132,14 @@ class VideoSourceGoPro:
             pipeline.add(elt)
             return elt
 
-        avdec_aac = mkelt("avdec_aac")
-        aout.link(avdec_aac)
+        if self.pcm:
+            avdec = aout
+        else:
+            avdec = mkelt("avdec_aac")
+            aout.link(avdec)
 
         audioconvert = mkelt("audioconvert")
-        avdec_aac.link(audioconvert)
+        avdec.link(audioconvert)
 
         audioresample = mkelt("audioresample")
         audioconvert.link(audioresample)
